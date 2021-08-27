@@ -1,0 +1,98 @@
+import { StatusBar } from "expo-status-bar";
+import React, { useState } from "react";
+import {
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  Dimensions,
+  Pressable,
+} from "react-native";
+import Card from "./components/Card";
+import Filter from "./components/Filter";
+import { data as mockdata } from "./mocks/agents";
+import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
+
+const filter = <FontAwesome5 name={"filter"} color="#000" size={18} />;
+
+export default function App() {
+  const [appWidth, setAppWidth] = useState(Dimensions.get("window").width);
+  const [appHeight, setAppHeight] = useState(Dimensions.get("window").height);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [data, setData] = useState(mockdata);
+  const [filterParams, setFilterParams] = useState('');
+
+  Dimensions.addEventListener("change", (e) => {
+    setAppWidth(e.window.width);
+    setAppHeight(e.window.height);
+  });
+
+  const applyFilter = (param) => {
+    setFilterParams(JSON.stringify(param))
+    setData(
+      mockdata.filter((d) => {
+        if(param.teamName === 'All' && param.agentState === 'All') {
+          return true
+        } else if (d.teamName === param.teamName && d.agentState === param.agentState) {
+          return true;
+        } else if(param.teamName === 'All' && param.agentState !== 'All' ) {
+          return d.agentState === param.agentState;
+        } else if(param.agentState === 'All' && param.teamName !== 'All' ) {
+          return d.teamName === param.teamName;
+        }
+      })
+    );
+    setModalVisible(false);
+  };
+
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.filterContainer}>
+        <Text>{filterParams}</Text>
+        <Pressable
+          style={[styles.button, styles.buttonOpen]}
+          onPress={() => setModalVisible(true)}
+        >
+          {filter}
+        </Pressable>
+      </View>
+      <Filter visible={modalVisible} applyFilter={applyFilter} />
+      <ScrollView contentContainerStyle={styles.scrollView}>
+        {data.map((d) => {
+          return <Card key={d._id} data={d}></Card>;
+        })}
+        <StatusBar style="auto" />
+      </ScrollView>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+
+  scrollView: {
+    alignItems: "flex-start",
+    height: "100%",
+    justifyContent: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    flexGrow: 1 
+  },
+  text: {
+    fontSize: 42,
+  },
+
+  filterContainer: {
+    marginTop: 20,
+    justifyContent: "space-around",
+    alignItems: "center",
+    padding: 10,
+    borderRadius: 10,
+    marginHorizontal: 5,
+    backgroundColor: "#E9E4E4",
+    flexDirection: "row"
+  },
+});
